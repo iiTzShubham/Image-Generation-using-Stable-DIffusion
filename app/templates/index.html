@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Image Generator</title>
+    <script src="{{ url_for('static', filename='progress.js') }}"></script>
+</head>
+<body>
+    <h1>Text-to-Image Generator</h1>
+    <form id="promptForm">
+        <label for="prompt">Enter your prompt:</label>
+        <input type="text" id="prompt" name="prompt" required>
+        <button type="submit">Generate Image</button>
+    </form>
+    <div id="progress-container" style="display:none;">
+        <p>Generating image... Please wait.</p>
+        <progress id="progress-bar" value="0" max="100"></progress>
+    </div>
+    <div id="image-container" style="display:none;">
+        <h2>Generated Image:</h2>
+        <img id="generated-image" src="" alt="Generated Image">
+    </div>
+    <script>
+        document.getElementById('promptForm').onsubmit = function(event) {
+            event.preventDefault();
+            var prompt = document.getElementById('prompt').value;
+            var progressBar = document.getElementById('progress-bar');
+            var progressContainer = document.getElementById('progress-container');
+            var imageContainer = document.getElementById('image-container');
+            var generatedImage = document.getElementById('generated-image');
+
+            progressContainer.style.display = 'block';
+            imageContainer.style.display = 'none';
+            progressBar.value = 0;
+
+            var interval = setInterval(function() {
+                if (progressBar.value < 100) {
+                    progressBar.value += 1;
+                }
+            }, 100);
+
+            fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({prompt: prompt}),
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(interval);
+                progressBar.value = 100;
+                generatedImage.src = data.image_url;
+                imageContainer.style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
+        };
+    </script>
+</body>
+</html>
